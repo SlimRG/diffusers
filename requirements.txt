@@ -1,0 +1,43 @@
+# Core dependencies for WAN 2.1 Video Outpainting
+requests>=2.31.0
+opencv-python>=4.8.0
+numpy>=1.24.0
+websocket-client>=1.6.0
+
+# Optional dependencies for enhanced functionality
+Pillow>=10.0.0
+tqdm>=4.65.0
+
+# For video processing utilities
+ffmpeg-python>=0.2.0
+
+# For type hints and development
+typing-extensions>=4.7.0
+
+# For async operations (if needed)
+aiohttp>=3.8.0
+asyncio>=3.4.3
+
+# For logging and configuration
+pyyaml>=6.0.0
+
+# For command line interface
+argparse
+
+# For JSON handling (built-in but specified for completeness)
+json
+
+# For path handling
+pathlib
+
+# For UUID generation
+uuid
+
+# For temporary file operations
+tempfile
+
+# For subprocess operations
+subprocess
+
+# Additional utilities
+urllib3>=2.0.0

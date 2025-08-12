@@ -1,239 +1,379 @@
-<!---
-Copyright 2022 - The HuggingFace Team. All rights reserved.
+# WAN 2.1 Video Outpainting Toolkit
 
-Licensed under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
+A comprehensive Python toolkit for video outpainting using the WAN 2.1 (Wide Area Network 2.1) VACE model. This toolkit provides both cloud-based (Alibaba Cloud API) and local (ComfyUI) implementations for extending video boundaries with AI-generated content.
 
-    http://www.apache.org/licenses/LICENSE-2.0
+## Features
 
-Unless required by applicable law or agreed to in writing, software
-distributed under the License is distributed on an "AS IS" BASIS,
-WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-See the License for the specific language governing permissions and
-limitations under the License.
--->
-
-<p align="center">
-    <br>
-    <img src="https://raw.githubusercontent.com/huggingface/diffusers/main/docs/source/en/imgs/diffusers_library.jpg" width="400"/>
-    <br>
-<p>
-<p align="center">
-    <a href="https://github.com/huggingface/diffusers/blob/main/LICENSE"><img alt="GitHub" src="https://img.shields.io/github/license/huggingface/datasets.svg?color=blue"></a>
-    <a href="https://github.com/huggingface/diffusers/releases"><img alt="GitHub release" src="https://img.shields.io/github/release/huggingface/diffusers.svg"></a>
-    <a href="https://pepy.tech/project/diffusers"><img alt="GitHub release" src="https://static.pepy.tech/badge/diffusers/month"></a>
-    <a href="CODE_OF_CONDUCT.md"><img alt="Contributor Covenant" src="https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg"></a>
-    <a href="https://twitter.com/diffuserslib"><img alt="X account" src="https://img.shields.io/twitter/url/https/twitter.com/diffuserslib.svg?style=social&label=Follow%20%40diffuserslib"></a>
-</p>
-
-🤗 Diffusers is the go-to library for state-of-the-art pretrained diffusion models for generating images, audio, and even 3D structures of molecules. Whether you're looking for a simple inference solution or training your own diffusion models, 🤗 Diffusers is a modular toolbox that supports both. Our library is designed with a focus on [usability over performance](https://huggingface.co/docs/diffusers/conceptual/philosophy#usability-over-performance), [simple over easy](https://huggingface.co/docs/diffusers/conceptual/philosophy#simple-over-easy), and [customizability over abstractions](https://huggingface.co/docs/diffusers/conceptual/philosophy#tweakable-contributorfriendly-over-abstraction).
-
-🤗 Diffusers offers three core components:
-
-- State-of-the-art [diffusion pipelines](https://huggingface.co/docs/diffusers/api/pipelines/overview) that can be run in inference with just a few lines of code.
-- Interchangeable noise [schedulers](https://huggingface.co/docs/diffusers/api/schedulers/overview) for different diffusion speeds and output quality.
-- Pretrained [models](https://huggingface.co/docs/diffusers/api/models/overview) that can be used as building blocks, and combined with schedulers, for creating your own end-to-end diffusion systems.
+- 🎥 **Video Outpainting**: Extend video boundaries in all directions
+- ☁️ **Cloud & Local**: Support for both Alibaba Cloud API and local ComfyUI
+- 🛠️ **Video Processing**: Comprehensive video validation and processing utilities
+- 📊 **Progress Tracking**: Real-time progress monitoring and logging
+- 🔧 **Flexible Configuration**: Customizable scaling factors and generation parameters
+- 📈 **Batch Processing**: Support for processing multiple videos
 
 ## Installation
 
-We recommend installing 🤗 Diffusers in a virtual environment from PyPI or Conda. For more details about installing [PyTorch](https://pytorch.org/get-started/locally/) and [Flax](https://flax.readthedocs.io/en/latest/#installation), please refer to their official documentation.
+### Prerequisites
 
-### PyTorch
+- Python 3.8 or higher
+- FFmpeg (for video processing utilities)
+- For local processing: ComfyUI with WAN 2.1 models
 
-With `pip` (official package):
-
-```bash
-pip install --upgrade diffusers[torch]
-```
-
-With `conda` (maintained by the community):
-
-```sh
-conda install -c conda-forge diffusers
-```
-
-### Flax
-
-With `pip` (official package):
+### Install Dependencies
 
 ```bash
-pip install --upgrade diffusers[flax]
+pip install -r requirements.txt
 ```
 
-### Apple Silicon (M1/M2) support
+### Additional Setup
 
-Please refer to the [How to use Stable Diffusion in Apple Silicon](https://huggingface.co/docs/diffusers/optimization/mps) guide.
+#### For Alibaba Cloud API:
+1. Sign up for Alibaba Cloud DashScope
+2. Obtain your API key
+3. Set environment variable: `export DASHSCOPE_API_KEY=your_api_key`
 
-## Quickstart
+#### For Local ComfyUI:
+1. Install ComfyUI
+2. Download required models:
+   - `wan2.1_t2v_14B_fp8_e4m3fn.safetensors`
+   - `Wan2_1-VACE_module_14B_fp8_e4m3fn.safetensors`
+   - `Wan2_1_VAE_bf16.safetensors`
+   - `umt5-xxl-enc-bf16.safetensors`
 
-Generating outputs is super easy with 🤗 Diffusers. To generate an image from text, use the `from_pretrained` method to load any pretrained diffusion model (browse the [Hub](https://huggingface.co/models?library=diffusers&sort=downloads) for 30,000+ checkpoints):
+## Quick Start
+
+### Using Alibaba Cloud API
 
 ```python
-from diffusers import DiffusionPipeline
-import torch
+from wan_video_outpainting import WanVideoOutpainter
 
-pipeline = DiffusionPipeline.from_pretrained("stable-diffusion-v1-5/stable-diffusion-v1-5", torch_dtype=torch.float16)
-pipeline.to("cuda")
-pipeline("An image of a squirrel in Picasso style").images[0]
+# Initialize with API key
+outpainter = WanVideoOutpainter("your_api_key")
+
+# Outpaint a video
+result_path = outpainter.outpaint_video(
+    video_url="https://example.com/your_video.mp4",
+    prompt="A beautiful garden with blooming flowers extending beyond the frame",
+    output_path="./outpainted_video.mp4",
+    top_scale=1.5,
+    bottom_scale=1.5,
+    left_scale=1.5,
+    right_scale=1.5
+)
+
+print(f"Outpainted video saved to: {result_path}")
 ```
 
-You can also dig into the models and schedulers toolbox to build your own diffusion system:
+### Command Line Usage - Cloud API
+
+```bash
+python wan_video_outpainting.py \
+    --video-url "https://example.com/video.mp4" \
+    --prompt "A serene landscape with mountains in the background" \
+    --output "./result.mp4" \
+    --top-scale 1.3 \
+    --bottom-scale 1.3 \
+    --left-scale 1.5 \
+    --right-scale 1.5
+```
+
+### Using Local ComfyUI
 
 ```python
-from diffusers import DDPMScheduler, UNet2DModel
-from PIL import Image
-import torch
+from comfyui_wan_outpainting import ComfyUIWanOutpainter
 
-scheduler = DDPMScheduler.from_pretrained("google/ddpm-cat-256")
-model = UNet2DModel.from_pretrained("google/ddpm-cat-256").to("cuda")
-scheduler.set_timesteps(50)
+# Initialize ComfyUI outpainter
+outpainter = ComfyUIWanOutpainter("http://127.0.0.1:8188")
 
-sample_size = model.config.sample_size
-noise = torch.randn((1, 3, sample_size, sample_size), device="cuda")
-input = noise
-
-for t in scheduler.timesteps:
-    with torch.no_grad():
-        noisy_residual = model(input, t).sample
-        prev_noisy_sample = scheduler.step(noisy_residual, t, input).prev_sample
-        input = prev_noisy_sample
-
-image = (input / 2 + 0.5).clamp(0, 1)
-image = image.cpu().permute(0, 2, 3, 1).numpy()[0]
-image = Image.fromarray((image * 255).round().astype("uint8"))
-image
+# Outpaint a local video
+result_path = outpainter.outpaint_video(
+    video_path="./input_video.mp4",
+    prompt="An elegant ballroom with crystal chandeliers",
+    negative_prompt="blurry, low quality, distorted",
+    top_scale=1.4,
+    bottom_scale=1.4,
+    left_scale=1.6,
+    right_scale=1.6,
+    steps=25,
+    cfg=7.5
+)
 ```
 
-Check out the [Quickstart](https://huggingface.co/docs/diffusers/quicktour) to launch your diffusion journey today!
+### Command Line Usage - ComfyUI
 
-## How to navigate the documentation
-
-| **Documentation**                                                   | **What can I learn?**                                                                                                                                                                           |
-|---------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Tutorial](https://huggingface.co/docs/diffusers/tutorials/tutorial_overview)                                                            | A basic crash course for learning how to use the library's most important features like using models and schedulers to build your own diffusion system, and training your own diffusion model.  |
-| [Loading](https://huggingface.co/docs/diffusers/using-diffusers/loading)                                                             | Guides for how to load and configure all the components (pipelines, models, and schedulers) of the library, as well as how to use different schedulers.                                         |
-| [Pipelines for inference](https://huggingface.co/docs/diffusers/using-diffusers/overview_techniques)                                             | Guides for how to use pipelines for different inference tasks, batched generation, controlling generated outputs and randomness, and how to contribute a pipeline to the library.               |
-| [Optimization](https://huggingface.co/docs/diffusers/optimization/fp16)                                                        | Guides for how to optimize your diffusion model to run faster and consume less memory.                                                                                                          |
-| [Training](https://huggingface.co/docs/diffusers/training/overview) | Guides for how to train a diffusion model for different tasks with different training techniques.                                                                                               |
-## Contribution
-
-We ❤️  contributions from the open-source community!
-If you want to contribute to this library, please check out our [Contribution guide](https://github.com/huggingface/diffusers/blob/main/CONTRIBUTING.md).
-You can look out for [issues](https://github.com/huggingface/diffusers/issues) you'd like to tackle to contribute to the library.
-- See [Good first issues](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) for general opportunities to contribute
-- See [New model/pipeline](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22New+pipeline%2Fmodel%22) to contribute exciting new diffusion models / diffusion pipelines
-- See [New scheduler](https://github.com/huggingface/diffusers/issues?q=is%3Aopen+is%3Aissue+label%3A%22New+scheduler%22)
-
-Also, say 👋 in our public Discord channel <a href="https://discord.gg/G7tWnz98XR"><img alt="Join us on Discord" src="https://img.shields.io/discord/823813159592001537?color=5865F2&logo=discord&logoColor=white"></a>. We discuss the hottest trends about diffusion models, help each other with contributions, personal projects or just hang out ☕.
-
-
-## Popular Tasks & Pipelines
-
-<table>
-  <tr>
-    <th>Task</th>
-    <th>Pipeline</th>
-    <th>🤗 Hub</th>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Unconditional Image Generation</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/ddpm"> DDPM </a></td>
-    <td><a href="https://huggingface.co/google/ddpm-ema-church-256"> google/ddpm-ema-church-256 </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/text2img">Stable Diffusion Text-to-Image</a></td>
-      <td><a href="https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5"> stable-diffusion-v1-5/stable-diffusion-v1-5 </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/unclip">unCLIP</a></td>
-      <td><a href="https://huggingface.co/kakaobrain/karlo-v1-alpha"> kakaobrain/karlo-v1-alpha </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/deepfloyd_if">DeepFloyd IF</a></td>
-      <td><a href="https://huggingface.co/DeepFloyd/IF-I-XL-v1.0"> DeepFloyd/IF-I-XL-v1.0 </a></td>
-  </tr>
-  <tr>
-    <td>Text-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/kandinsky">Kandinsky</a></td>
-      <td><a href="https://huggingface.co/kandinsky-community/kandinsky-2-2-decoder"> kandinsky-community/kandinsky-2-2-decoder </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/controlnet">ControlNet</a></td>
-      <td><a href="https://huggingface.co/lllyasviel/sd-controlnet-canny"> lllyasviel/sd-controlnet-canny </a></td>
-  </tr>
-  <tr>
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/pix2pix">InstructPix2Pix</a></td>
-      <td><a href="https://huggingface.co/timbrooks/instruct-pix2pix"> timbrooks/instruct-pix2pix </a></td>
-  </tr>
-  <tr>
-    <td>Text-guided Image-to-Image</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/img2img">Stable Diffusion Image-to-Image</a></td>
-      <td><a href="https://huggingface.co/stable-diffusion-v1-5/stable-diffusion-v1-5"> stable-diffusion-v1-5/stable-diffusion-v1-5 </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Text-guided Image Inpainting</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/inpaint">Stable Diffusion Inpainting</a></td>
-      <td><a href="https://huggingface.co/runwayml/stable-diffusion-inpainting"> runwayml/stable-diffusion-inpainting </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Image Variation</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/image_variation">Stable Diffusion Image Variation</a></td>
-      <td><a href="https://huggingface.co/lambdalabs/sd-image-variations-diffusers"> lambdalabs/sd-image-variations-diffusers </a></td>
-  </tr>
-  <tr style="border-top: 2px solid black">
-    <td>Super Resolution</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/upscale">Stable Diffusion Upscale</a></td>
-      <td><a href="https://huggingface.co/stabilityai/stable-diffusion-x4-upscaler"> stabilityai/stable-diffusion-x4-upscaler </a></td>
-  </tr>
-  <tr>
-    <td>Super Resolution</td>
-    <td><a href="https://huggingface.co/docs/diffusers/api/pipelines/stable_diffusion/latent_upscale">Stable Diffusion Latent Upscale</a></td>
-      <td><a href="https://huggingface.co/stabilityai/sd-x2-latent-upscaler"> stabilityai/sd-x2-latent-upscaler </a></td>
-  </tr>
-</table>
-
-## Popular libraries using 🧨 Diffusers
-
-- https://github.com/microsoft/TaskMatrix
-- https://github.com/invoke-ai/InvokeAI
-- https://github.com/InstantID/InstantID
-- https://github.com/apple/ml-stable-diffusion
-- https://github.com/Sanster/lama-cleaner
-- https://github.com/IDEA-Research/Grounded-Segment-Anything
-- https://github.com/ashawkey/stable-dreamfusion
-- https://github.com/deep-floyd/IF
-- https://github.com/bentoml/BentoML
-- https://github.com/bmaltais/kohya_ss
-- +14,000 other amazing GitHub repositories 💪
-
-Thank you for using us ❤️.
-
-## Credits
-
-This library concretizes previous work by many different authors and would not have been possible without their great research and implementations. We'd like to thank, in particular, the following implementations which have helped us in our development and without which the API could not have been as polished today:
-
-- @CompVis' latent diffusion models library, available [here](https://github.com/CompVis/latent-diffusion)
-- @hojonathanho original DDPM implementation, available [here](https://github.com/hojonathanho/diffusion) as well as the extremely useful translation into PyTorch by @pesser, available [here](https://github.com/pesser/pytorch_diffusion)
-- @ermongroup's DDIM implementation, available [here](https://github.com/ermongroup/ddim)
-- @yang-song's Score-VE and Score-VP implementations, available [here](https://github.com/yang-song/score_sde_pytorch)
-
-We also want to thank @heejkoo for the very helpful overview of papers, code and resources on diffusion models, available [here](https://github.com/heejkoo/Awesome-Diffusion-Models) as well as @crowsonkb and @rromb for useful discussions and insights.
-
-## Citation
-
-```bibtex
-@misc{von-platen-etal-2022-diffusers,
-  author = {Patrick von Platen and Suraj Patil and Anton Lozhkov and Pedro Cuenca and Nathan Lambert and Kashif Rasul and Mishig Davaadorj and Dhruv Nair and Sayak Paul and William Berman and Yiyi Xu and Steven Liu and Thomas Wolf},
-  title = {Diffusers: State-of-the-art diffusion models},
-  year = {2022},
-  publisher = {GitHub},
-  journal = {GitHub repository},
-  howpublished = {\url{https://github.com/huggingface/diffusers}}
-}
+```bash
+python comfyui_wan_outpainting.py \
+    --video-path "./input.mp4" \
+    --prompt "A magical forest with ethereal lighting" \
+    --negative-prompt "dark, gloomy, low quality" \
+    --top-scale 1.5 \
+    --bottom-scale 1.2 \
+    --left-scale 1.8 \
+    --right-scale 1.8 \
+    --steps 30 \
+    --cfg 8.0
 ```
+
+## Advanced Usage
+
+### Video Processing Utilities
+
+```python
+from video_utils import VideoProcessor, calculate_outpaint_dimensions
+
+# Get video information
+info = VideoProcessor.get_video_info("video.mp4")
+print(f"Resolution: {info['width']}x{info['height']}")
+print(f"Duration: {info['duration']:.2f} seconds")
+print(f"FPS: {info['fps']}")
+
+# Validate video constraints
+is_valid, issues = VideoProcessor.check_video_constraints(
+    "video.mp4",
+    max_duration=300,  # 5 minutes
+    max_resolution=(1920, 1080),
+    min_resolution=(480, 360)
+)
+
+if not is_valid:
+    print("Video validation issues:", issues)
+
+# Calculate final dimensions after outpainting
+final_w, final_h = calculate_outpaint_dimensions(
+    original_width=1920,
+    original_height=1080,
+    top_scale=1.5,
+    bottom_scale=1.5,
+    left_scale=1.3,
+    right_scale=1.3
+)
+print(f"Final resolution will be: {final_w}x{final_h}")
+```
+
+### Video Upload for Cloud Processing
+
+```python
+from video_utils import VideoUploader
+
+# Upload video to temporary hosting (for cloud API)
+video_url = VideoUploader.upload_to_temp_host(
+    "local_video.mp4",
+    service="file.io",
+    max_size_mb=100
+)
+print(f"Video uploaded: {video_url}")
+```
+
+### Create Comparison Videos
+
+```python
+from video_utils import create_comparison_video
+
+# Create side-by-side comparison
+comparison_path = create_comparison_video(
+    original_path="original.mp4",
+    outpainted_path="outpainted.mp4",
+    output_path="comparison.mp4",
+    side_by_side=True
+)
+```
+
+## Configuration Parameters
+
+### Scaling Parameters
+
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `top_scale` | Top expansion factor | 1.5 | 1.0-3.0 |
+| `bottom_scale` | Bottom expansion factor | 1.5 | 1.0-3.0 |
+| `left_scale` | Left expansion factor | 1.5 | 1.0-3.0 |
+| `right_scale` | Right expansion factor | 1.5 | 1.0-3.0 |
+
+### Generation Parameters (ComfyUI)
+
+| Parameter | Description | Default | Range |
+|-----------|-------------|---------|-------|
+| `steps` | Denoising steps | 20 | 10-50 |
+| `cfg` | CFG scale | 7.0 | 1.0-20.0 |
+| `guidance_scale` | Guidance scale | 4.5 | 1.0-10.0 |
+| `scheduler` | Scheduler type | "ddim" | ddim, euler, etc. |
+
+## Examples
+
+### Basic Outpainting
+
+```bash
+# Simple 1.5x expansion in all directions
+python wan_video_outpainting.py \
+    --video-url "https://example.com/dance.mp4" \
+    --prompt "A grand theater stage with audience in the background" \
+    --output "./dance_outpainted.mp4"
+```
+
+### Asymmetric Expansion
+
+```bash
+# Different scaling for each direction
+python wan_video_outpainting.py \
+    --video-url "https://example.com/portrait.mp4" \
+    --prompt "A beautiful garden with flowers and trees" \
+    --output "./portrait_expanded.mp4" \
+    --top-scale 2.0 \
+    --bottom-scale 1.2 \
+    --left-scale 1.8 \
+    --right-scale 1.8
+```
+
+### High Quality Processing (ComfyUI)
+
+```bash
+# High-quality local processing
+python comfyui_wan_outpainting.py \
+    --video-path "./input.mp4" \
+    --prompt "An opulent palace ballroom with golden decorations" \
+    --negative-prompt "blurry, low quality, artifacts, distorted" \
+    --steps 40 \
+    --cfg 8.5 \
+    --guidance-scale 5.0 \
+    --top-scale 1.6 \
+    --bottom-scale 1.4 \
+    --left-scale 1.7 \
+    --right-scale 1.7
+```
+
+## Model Requirements
+
+### For ComfyUI Setup
+
+1. **WAN 2.1 Models** (place in `models/diffusion_models/`):
+   - `wan2.1_t2v_14B_fp8_e4m3fn.safetensors` (~28GB)
+
+2. **VACE Module** (place in `models/diffusion_models/`):
+   - `Wan2_1-VACE_module_14B_fp8_e4m3fn.safetensors` (~28GB)
+
+3. **VAE** (place in `models/vae/`):
+   - `Wan2_1_VAE_bf16.safetensors` (~335MB)
+
+4. **Text Encoder** (place in `models/text_encoders/`):
+   - `umt5-xxl-enc-bf16.safetensors` (~21GB)
+
+### Hardware Requirements
+
+- **Minimum**: 24GB VRAM (RTX 4090, A6000)
+- **Recommended**: 40GB+ VRAM (A100, H100)
+- **CPU**: 16+ cores recommended
+- **RAM**: 32GB+ system RAM
+- **Storage**: 100GB+ free space for models
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Out of Memory (VRAM)**
+   - Reduce batch size
+   - Use fp8 quantized models
+   - Consider model offloading
+
+2. **FFmpeg Not Found**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt install ffmpeg
+   
+   # macOS
+   brew install ffmpeg
+   
+   # Windows
+   # Download from https://ffmpeg.org/
+   ```
+
+3. **API Rate Limits**
+   - Implement retry logic
+   - Use exponential backoff
+   - Consider upgrading API plan
+
+4. **ComfyUI Connection Issues**
+   - Verify ComfyUI is running on correct port
+   - Check firewall settings
+   - Ensure all models are properly loaded
+
+### Performance Optimization
+
+1. **For Cloud API**:
+   - Upload videos to CDN for faster access
+   - Use video compression before processing
+   - Batch multiple requests
+
+2. **For ComfyUI**:
+   - Use FP8 quantized models
+   - Enable model offloading
+   - Optimize ComfyUI settings
+
+## API Reference
+
+### WanVideoOutpainter Class
+
+```python
+class WanVideoOutpainter:
+    def __init__(self, api_key: str, base_url: str = "https://dashscope-intl.aliyuncs.com")
+    
+    def outpaint_video(
+        self, 
+        video_url: str, 
+        prompt: str, 
+        output_path: str,
+        top_scale: float = 1.5,
+        bottom_scale: float = 1.5,
+        left_scale: float = 1.5,
+        right_scale: float = 1.5,
+        max_wait_time: int = 1800
+    ) -> str
+```
+
+### ComfyUIWanOutpainter Class
+
+```python
+class ComfyUIWanOutpainter:
+    def __init__(self, comfyui_url: str = "http://127.0.0.1:8188")
+    
+    def outpaint_video(
+        self,
+        video_path: str,
+        prompt: str,
+        negative_prompt: str = "",
+        top_scale: float = 1.5,
+        bottom_scale: float = 1.5,
+        left_scale: float = 1.5,
+        right_scale: float = 1.5,
+        steps: int = 20,
+        cfg: float = 7.0,
+        guidance_scale: float = 4.5,
+        max_wait_time: int = 1800
+    ) -> str
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- WAN Video Team for the WAN 2.1 model
+- Alibaba Cloud for the DashScope API
+- ComfyUI community for the interface and workflows
+- FFmpeg team for video processing capabilities
+
+## Support
+
+For issues and questions:
+- Create an issue on GitHub
+- Check the troubleshooting section
+- Review ComfyUI documentation for local setup
+- Consult Alibaba Cloud docs for API issues
